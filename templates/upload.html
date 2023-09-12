@@ -1,0 +1,76 @@
+<!doctype html>
+<head>
+	<title>Anomaly Detetction in Videos</title>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+	<div class="container">
+	<h4>Select a video to upload and play</h4>
+	<p>
+		{% with messages = get_flashed_messages() %}
+		  {% if messages %}
+
+		  {% endif %}
+		{% endwith %}
+	</p>
+	{% if filename %}
+	<div style="margin: 10px auto; color: #999;"> <!-- Light gray color -->
+		Video successfully uploaded and displayed below: <strong>{{ filename }}</strong>
+	</div>
+	<div>
+		<video controls="controls" preload="preload" width="480" height="360">
+			<source src="{{ url_for('display_video', filename=filename) }}" type="video/mp4"></source>
+		</video>
+	</div>
+	{% endif %}
+	<form method="post" action="/" enctype="multipart/form-data">
+		<div>
+			<label class="file-upload-label" for="file">Choose File</label>
+			<input type="file" name="file" id="file" autocomplete="off" required onchange="updateFileName(this)">
+			<span id="selected-file-name"></span> 
+		</div>
+		<div>
+			<input class="upload-btn" type="submit" value="Upload">
+		</div>
+		<div class="analyze-btn">
+			<button class="upload-btn" type="button" onclick="analyzeVideo('{{ filename }}')">Analyze Video</button>
+		</div>
+		<div class="processing-message" id="processing-message"></div>
+	</form>
+	</div>
+</body>
+
+
+
+<script>
+
+	function updateFileName(input) {
+			const selectedFile = input.files[0];
+			const fileNameSpan = document.getElementById('selected-file-name');
+			if (selectedFile) {
+				fileNameSpan.textContent = `Selected file: ${selectedFile.name}`;
+			} else {
+				fileNameSpan.textContent = '';
+			}
+		}
+    function analyzeVideo(filename) {
+		const processingMessage = document.getElementById('processing-message');
+        processingMessage.textContent = 'Processing video... Checking for anomalies... Please Wait';
+        fetch('/analyze_video', {
+            method: 'POST',
+            body: JSON.stringify({ filename: filename }),
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Analysis result:', data);
+			processingMessage.textContent = "Video analysis done for anomaly detection";
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
